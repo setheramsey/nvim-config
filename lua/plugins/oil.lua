@@ -3,5 +3,10 @@ return {
 	keys = {
 		{ "-", "<cmd>Oil<CR>", desc = "Open parent directory" },
 	},
-	opts = {},
+	lazy = false,
+	opts = {
+		view_options = {
+			show_hidden = true,
+		},
+	},
 }

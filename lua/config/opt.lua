@@ -8,9 +8,9 @@ vim.opt.smartindent = true
 vim.opt.smarttab = true
 vim.opt.list = true
 vim.opt.listchars = {
-    tab = '> ',
-    extends = '>',
-    precedes = '<'
+	tab = "> ",
+	extends = ">",
+	precedes = "<",
 }
 
 vim.opt.number = true
@@ -22,7 +22,7 @@ vim.opt.showcmd = true
 
 vim.opt.swapfile = false
 vim.opt.backup = false
-vim.opt.undodir = os.getenv("HOME") .. "/.config/nvim/undodir"
+vim.opt.undodir = os.getenv("HOME") .. "/.local/state/nvim/undodir"
 vim.opt.undofile = true
 vim.opt.clipboard = "unnamed"
 
@@ -35,13 +35,15 @@ vim.opt.termguicolors = true
 
 vim.opt.showmode = false
 
+vim.o.winborder = "rounded"
+
 -- No automatic comment insertion
 vim.cmd([[autocmd FileType * set formatoptions-=ro]])
 
 vim.api.nvim_create_autocmd("TextYankPost", {
-  desc = "Highlights text when yanking",
-  group = vim.api.nvim_create_augroup("kickstart-highlight-yank", { clear = true }),
-  callback = function()
-    vim.highlight.on_yank()
-  end,
+	desc = "Highlights text when yanking",
+	group = vim.api.nvim_create_augroup("kickstart-highlight-yank", { clear = true }),
+	callback = function()
+		vim.highlight.on_yank()
+	end,
 })

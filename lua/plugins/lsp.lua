@@ -3,6 +3,7 @@ return {
 	dependencies = {
 		"mason-org/mason-lspconfig.nvim",
 		"WhoIsSethDaniel/mason-tool-installer.nvim",
+		"neovim/nvim-lspconfig",
 	},
 	config = function()
 		require("mason").setup()
@@ -27,6 +28,78 @@ return {
 			},
 		})
 
-		vim.lsp.enable("lua_ls", "gopls", "pyright", "ts_ls", "html", "cssls", "jsonls")
+		vim.api.nvim_create_autocmd("LspAttach", {
+			group = vim.api.nvim_create_augroup("lsp-attach", { clear = true }),
+			callback = function(event)
+				local map = function(keys, func, desc, mode)
+					mode = mode or "n"
+					vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = "LSP: " .. desc })
+				end
+
+				map("gd", vim.lsp.buf.definition, "Go to definition")
+				map("gr", vim.lsp.buf.references, "Find references")
+				map("gD", vim.lsp.buf.declaration, "Go to declaration")
+				map("K", vim.lsp.buf.hover, "Hover documentation")
+				map("<leader>rn", vim.lsp.buf.rename, "Rename symbol")
+				map("<leader>ca", vim.lsp.buf.code_action, "Code action", { "n", "x" })
+
+				-- Highlight references of word under cursor
+				local client = vim.lsp.get_client_by_id(event.data.client_id)
+				if client and client:supports_method("textDocument/documentHighlight", event.buf) then
+					local highlight_augroup = vim.api.nvim_create_augroup("lsp-highlight", { clear = false })
+					vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+						buffer = event.buf,
+						group = highlight_augroup,
+						callback = vim.lsp.buf.document_highlight,
+					})
+					vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+						buffer = event.buf,
+						group = highlight_augroup,
+						callback = vim.lsp.buf.clear_references,
+					})
+					vim.api.nvim_create_autocmd("LspDetach", {
+						group = vim.api.nvim_create_augroup("lsp-detach", { clear = true }),
+						callback = function(event2)
+							vim.lsp.buf.clear_references()
+							vim.api.nvim_clear_autocmds({ group = "lsp-highlight", buffer = event2.buf })
+						end,
+					})
+				end
+
+				-- Toggle inlay hints
+				if client and client:supports_method("textDocument/inlayHint", event.buf) then
+					map("<leader>th", function()
+						vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = event.buf }))
+					end, "Toggle inlay hints")
+				end
+			end,
+		})
+
+		vim.lsp.config("lua_ls", {
+			on_init = function(client)
+				if client.workspace_folders then
+					local path = client.workspace_folders[1].name
+					if
+						path ~= vim.fn.stdpath("config")
+						and (vim.uv.fs_stat(path .. "/.luarc.json") or vim.uv.fs_stat(path .. "/.luarc.jsonc"))
+					then
+						return
+					end
+				end
+
+				client.config.settings.Lua = vim.tbl_deep_extend("force", client.config.settings.Lua, {
+					runtime = {
+						version = "LuaJIT",
+						path = { "lua/?.lua", "lua/?/init.lua" },
+					},
+					workspace = {
+						checkThirdParty = false,
+						library = { vim.env.VIMRUNTIME },
+					},
+				})
+			end,
+		})
+
+		vim.lsp.enable({ "lua_ls", "gopls", "pyright", "ts_ls", "html", "cssls", "jsonls" })
 	end,
 }

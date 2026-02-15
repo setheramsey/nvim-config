@@ -1,11 +1,20 @@
 return {
 	"saghen/blink.cmp",
 	version = "1.*",
-	dependencies = { "folke/lazydev.nvim", ft = "lua", opts = {} },
 	opts = {
 		keymap = {
 			preset = "default",
 			["<C-e>"] = { "accept", "fallback" },
+		},
+		completion = {
+			menu = {
+				border = "rounded",
+			},
+			documentation = {
+				window = {
+					border = "rounded",
+				},
+			},
 		},
 		sources = {
 			default = { "lazydev", "lsp", "path", "buffer" },
